@@ -1,0 +1,638 @@
+#include<stdio.h>
+#include<string.h>
+#include<process.h>
+#include<stdlib.h>
+#define N 80
+/*************定义资产管理系统****************/
+typedef struct
+{
+	char num[4];			//定义编号
+	char Proname[20];			//定义姓名
+	char count[15];			//定义数量
+	double money;				//定义钱总额,注意：不同类型数据，读写、排序方式不同。
+	char zhejiubi[15];		//定义折旧比
+	char day[30];			//定义住址
+	char username[15];		//定义使用者
+}Project;					//结构体名字改Project
+int addnum;					//定义要添加的数目
+typedef struct Node{
+	Project data;			//创建数据节点
+	struct Node *next;		//创建节点指针
+}LNode,*LinkedList;			//储存数据节点和节点指针的变量
+LinkedList L;					//S要改名L
+char fileProname[30];
+/**************新建项目函数************/
+
+void xinjian()
+{
+	system("cls");			//清屏
+	int i;
+	LNode *p,*r;
+	L=(LNode*)malloc(sizeof(LNode));		//根据变量情况动态创建数组
+	if(L==NULL)
+	{printf("无内存空间可分配");
+	exit(0);}								//判断有无可封皮内存，如果无则,exit(0)正常运行程序并退出程序
+	L->next=NULL;
+	r=L;
+	printf("\n请输入要加入财务管理系统的数目:\n");
+	scanf("%d",&addnum);
+	printf("请输入信息\n");
+	for(i=0;i<addnum;i++)			//通过addnum的值和循环获取数据
+	{
+		p=(LNode*)malloc(sizeof(LNode));
+		if(p==NULL)
+		{
+			printf("无内存空间可分配");
+			exit(0);
+		}
+		system("cls");
+		printf("请输入编号");
+		scanf("%s",p->data.num);
+		printf("\n请输入项目名：");
+		scanf("%s",p->data.Proname);
+		printf("\n请输入数量：");
+		scanf("%s",p->data.count);
+		printf("\n请输入总额：");
+		scanf("%lf",&p->data.money);
+		printf("\n请输入折旧比：");
+		scanf("%s",p->data.zhejiubi);
+		printf("\n请输入日期:");
+		scanf("%s",p->data.day);
+		printf("\n请输入使用者：");
+		scanf("%s",p->data.username);
+		p->next=NULL;
+		r->next=p;
+		r=p;
+	}
+	printf("通讯录信息已成功输入\n");
+	printf("请输入要保存的文件名\n");
+	scanf("%s",fileProname);				//获取文件名
+	FILE *fp;
+	if((fp=fopen(fileProname,"wb"))==NULL)
+	{
+		printf("不能创建文件，按任意键退出");
+		exit(0);
+	}
+	fwrite(&addnum,sizeof(int),1,fp);
+	r=L->next;
+	while(r!=NULL)
+	{
+		fwrite(&(r->data),sizeof(Project),1,fp);
+		r=r->next;
+	}
+	fclose(fp);
+}
+
+void xianshi()
+{
+	system("cls");					//清屏
+	LNode *r;
+	r=L->next;							//从表头开始获取数据,指针顺序显示
+	printf("编号\t名称        \t数量\t总额      \t折旧比\t购买日期\t使用者\n");
+	while(r!=NULL)
+	{
+		printf("%s\t%s         \t%s\t%.4lf \t%s\t%s\t%s\t\n",r->data.num,r->data.Proname,r->data.count,r->data.money,r->data.zhejiubi,r->data.day,r->data.username);
+		r=r->next;
+	}									//用循环进行输出
+}
+void Delete1(int i)		//删除第i条记录
+{
+    LNode *p,*pre;
+	pre=L;
+	int j=0;
+    while(pre->next!=NULL&&j<i-1) {pre=pre->next;j++;} //找到i节点位置，用指针覆盖此处数据
+	p=pre->next;
+	pre->next=p->next;		//指针向后移动
+	free(p);
+}
+void Delete2(char num[])		//删除指定编号的记录
+{
+    LNode *p,*pre;
+	pre=L;
+	int j=0;					
+    while(pre->next!=NULL&&strcmp(num,pre->next->data.num)!=0) {pre=pre->next;} //找到对应编号位置，用指针覆盖
+	p=pre->next;
+	pre->next=p->next;		
+	free(p);
+}
+
+void shanchu()                    //删除函数
+{
+  int j;
+  while(1)
+  {    
+	xianshi();
+    printf("***************删除子菜单******************\n");   //删除子菜单
+    printf("\t   1.删除第i条记录\n");
+    printf("\t   2.删除某个编号的记录\n");
+    printf("\t   3.退出删除子菜单\n");
+    printf("\t 请输入选项1-3\n");
+    scanf("%d",&j);
+	
+	switch (j)                  //switch函数删除
+	{
+	  
+      case 1: int i;    //对记录删除
+			  printf("请输入要删除的第条几记录");
+		      scanf("%d",&i);
+		      Delete1(i);break;
+      case 2: char num[5];  //对编号删除
+		      printf("请输入要删除的编号");
+		      scanf("%s",num);
+		      Delete2(num);break;
+      case 3: return;break;    //退出子菜单
+      default:printf("输入错误，请重新输入\n");	    //输入错误 重新输入 
+	}
+	xianshi();
+  }
+}
+void chazhao()            //查找函数
+{	int j;
+  while(1)
+  {    
+	
+    printf("***************查找子菜单******************\n");   //查找子菜单
+    printf("\t   1.按客户编号查找\n");
+    printf("\t   2.按项目名查找\n");
+    printf("\t   3.按购买日期查找\n");
+	printf("\t   4.按使用者查找\n");
+    printf("\t   5.退出查找子菜单\n");
+    printf("\t 请输入选项1-5\n");
+    scanf("%d",&j);                //switch函数查找
+	
+	switch (j)
+	{
+	  
+      case 1: char num1[4];  //对case1查找
+		      printf("请输入客户编号");
+		      scanf("%s",num1);
+		      LNode *r;   //指针指向查找对象
+	          r=L->next;
+              while(r&&strcmp(r->data.num,num1)!=0) {r=r->next;}  //比较查找对象的内容，并输出查找对象内容
+              if(r)
+                printf("%s\t%s\t%s\t%lf\t%s\t%s\t%s\t\n",r->data.num,r->data.Proname,r->data.count,r->data.money,r->data.zhejiubi,r->data.day,r->data.username);
+	          else
+				printf("未找到\n");
+			  break;
+      case 2: char Proname1[20];  //对case2查找
+		      printf("请输入项目名");
+		      scanf("%s",&Proname1);
+		      LNode *a;  //指针指向查找对象
+	          a=L->next;
+              while(a&&strcmp(a->data.Proname,Proname1)!=0) {a=a->next;}  //比较查找对象的内容，并输出查找对象内容
+              if(a)
+                printf("%s\t%s\t%s\t%lf\t%s\t%s\t%s\t\n",a->data.num,a->data.Proname,a->data.count,a->data.money,a->data.zhejiubi,a->data.day,a->data.username);
+	          else
+				printf("未找到\n");
+		      break;
+	  case 3: char day1[50];  //对case3查找
+		      printf("请输入日期");
+		      scanf("%s",&day1);
+		      LNode *b;  //指针指向查找对象
+	          b=L->next;
+              while(b&&strcmp(b->data.day,day1)!=0) {b=b->next;}  //比较查找对象的内容，并输出查找对象内容
+              if(b)
+                printf("%s\t%s\t%s\t%lf\t%s\t%s\t%s\t\n",r->data.num,r->data.Proname,r->data.count,r->data.money,r->data.zhejiubi,r->data.day,r->data.username);
+	          else
+				printf("未找到\n");
+		      break;
+	  case 4: char username1[50];  //对case3查找
+		      printf("请输入使用者");
+		      scanf("%s",&username1);
+		      LNode *c;  //指针指向查找对象
+	          c=L->next;
+              while(c&&strcmp(c->data.username,username1)!=0) {c=c->next;}  //比较查找对象的内容，并输出查找对象内容
+              if(c)
+                printf("%s\t%s\t%s\t%lf\t%s\t%s\t%s\t\n",c->data.num,c->data.Proname,c->data.count,c->data.money,c->data.zhejiubi,c->data.day,c->data.username);
+	          else
+				printf("未找到\n");
+		      break;
+ break;
+      case 5: return;break;
+      default:printf("输入错误，请重新输入\n");	 //输入错误重新输入
+	}
+  }
+}
+
+void xiugai()            //修改函数
+{
+ 	int j;
+  while(1)
+  {    
+	
+    printf("***************修改子菜单******************\n");  //修改函数子菜单
+    printf("\t   1.通过项目编号修改\n");
+    printf("\t   2.单独修改项目名\n");
+    printf("\t   3.单独修改日期\n");
+	printf("\t   4.单独修改使用者\n");
+    printf("\t   5.退出修改子菜单\n");
+    printf("\t 请输入选项1-5\n");
+    scanf("%d",&j);
+	
+	switch (j)         //用switch函数修改
+	{
+	  
+	  
+      case 1: char num[5];    //对序号修改
+		      printf("请输入数据编号");
+		      scanf("%s",num);
+		      LNode *r;    //指针指向修改对象
+	          r=L->next;
+              while(r&&strcmp(r->data.num,num)!=0) {r=r->next;}   //输出修改对象内容
+              if(r)
+			  {  printf("请输入新的编号");
+		         scanf("%s",r->data.num);
+				 printf("\n请输入项目名：");
+				scanf("%s",r->data.Proname);
+				printf("\n请输入数量：");
+				scanf("%s",r->data.count);
+				printf("\n请输入总额：");
+				scanf("%lf",&r->data.money);
+				printf("\n请输入折旧比：");
+				scanf("%s",r->data.zhejiubi);
+				printf("\n请输入日期:");
+				scanf("%s",r->data.day);
+				printf("\n请输入使用者：");
+				scanf("%s",r->data.username);
+			  }
+	          else
+				printf("该编号未找到\n");
+			  break;
+      case 2: char Proname[50];    //对case4修改
+		      printf("请输入项目名");
+		      scanf("%s",Proname);  
+		      LNode *a;//指针指向修改对象
+	          a=L->next;
+              while(a&&strcmp(a->data.Proname,Proname)!=0) {a=a->next;}  //输出修改对象内容
+              if(a)
+			  {  printf("请输入新的项目名");
+		         scanf("%s",a->data.Proname);
+			  }
+	          else
+				printf("该项目名未找到\n");
+		      break;
+	  case 3: char day[50];    //对case4修改
+		      printf("请输入日期");
+		      scanf("%s",day);  
+		      LNode *b;//指针指向修改对象
+	          b=L->next;
+              while(b&&strcmp(b->data.day,day)!=0) {b=b->next;}  //输出修改对象内容
+              if(b)
+			  {  printf("请输入新的日期");
+		         scanf("%s",b->data.day);
+			  }
+	          else
+				printf("该日期未找到\n");
+		      break;
+	   case 4: char username[50];    //对case4修改
+		      printf("请输入使用者");
+		      scanf("%s",username);  
+		      LNode *c;//指针指向修改对象
+	          c=L->next;
+              while(c&&strcmp(c->data.username,username)!=0) {c=c->next;}  //输出修改对象内容
+              if(c)
+			  {  printf("请输入新的使用者");
+		         scanf("%s",c->data.username);
+			  }
+	          else
+				printf("该使用者未找到\n");
+		      break;
+ break;
+      case 5: return;break;
+      default:printf("输入错误，请重新输入\n");	//输入错误 重新输入
+	}
+  }
+}
+
+
+void TailInsert() //表尾添加
+{
+	 LNode *p,*r;   //尾插法添加
+	 r=L;
+	 while(r->next!=NULL) r=r->next;
+     p=(LNode*)malloc(sizeof(LNode));
+     if(p==NULL)                          //没有内存
+	 {  printf("无内存空间可分配");
+        exit(0);
+	 }
+	 system("cls");     //清屏
+		printf("请输入编号");
+		scanf("%s",p->data.num);
+		printf("\n请输入项目名：");
+		scanf("%s",p->data.Proname);
+		printf("\n请输入数量：");
+		scanf("%s",p->data.count);
+		printf("\n请输入总额：");
+		scanf("%lf",&p->data.money);
+		printf("\n请输入折旧比：");
+		scanf("%s",p->data.zhejiubi);
+		printf("\n请输入日期:");
+		scanf("%s",p->data.day);
+		printf("\n请输入使用者：");
+		scanf("%s",p->data.username);
+	 p->next=NULL;
+	 r->next=p;					//指针向后移动
+}
+void HeadInsert()  //表头添加
+{ 
+	LNode *p,*r;    //头插法添加
+	 r=L->next;
+	  p=(LNode*)malloc(sizeof(LNode));
+	  if(p==NULL)                      //没有内存
+	 {  printf("无内存空间可分配");
+        exit(0);
+	 }
+	 system("cls");
+		printf("请输入编号");
+		scanf("%s",p->data.num);
+		printf("\n请输入项目名：");
+		scanf("%s",p->data.Proname);
+		printf("\n请输入数量：");
+		scanf("%s",p->data.count);
+		printf("\n请输入总额：");
+		scanf("%lf",&p->data.money);
+		printf("\n请输入折旧比：");
+		scanf("%s",p->data.zhejiubi);
+		printf("\n请输入日期:");
+		scanf("%s",p->data.day);
+		printf("\n请输入使用者：");
+		scanf("%s",p->data.username);
+			L->next=p;
+	 p->next=r;					//指针向后移动
+}
+
+
+
+
+void Insert1(int i)       //第i个元素之前添加
+{
+        int j;
+	LNode *p,*r,*z;
+	r=L;
+	for(j=0;j!=i;j++)         //建空间
+		r=r->next;
+	z=r->next;
+	
+	p=(LNode*)malloc(sizeof(LNode));  //无内存
+	if(p==NULL)
+	{
+		printf("无内存空间可分配");
+		exit(0);
+	}
+	system("cls");      //清屏
+		printf("请输入编号");
+		scanf("%s",p->data.num);
+		printf("\n请输入项目名：");
+		scanf("%s",p->data.Proname);
+		printf("\n请输入数量：");
+		scanf("%s",p->data.count);
+		printf("\n请输入总额：");
+		scanf("%lf",&p->data.money);
+		printf("\n请输入折旧比：");
+		scanf("%s",p->data.zhejiubi);
+		printf("\n请输入日期:");
+		scanf("%s",p->data.day);
+		printf("\n请输入使用者：");
+		scanf("%s",p->data.username);
+			p->next=z;
+	r->next=p;		//指针向后移动
+  
+  
+}
+
+void Insert2(char num[])   //在某个编号之前添加
+{
+        int j;
+	LNode *p,*r,*z;    
+	r=L;
+	for(j=0;strcmp(num,r->data.num)!=0;j++)
+		r=r->next;
+	z=r->next;
+	p=(LNode*)malloc(sizeof(LNode));     //建立空间
+	if(p==NULL)                      //无内存
+	{
+		printf("无内存空间可分配");
+		exit(0);
+	}
+system("cls");                //清屏
+		printf("请输入编号");
+		scanf("%s",p->data.num);
+		printf("\n请输入项目名：");
+		scanf("%s",p->data.Proname);
+		printf("\n请输入数量：");
+		scanf("%s",p->data.count);
+		printf("\n请输入总额：");
+		scanf("%lf",&p->data.money);
+		printf("\n请输入折旧比：");
+		scanf("%s",p->data.zhejiubi);
+		printf("\n请输入日期:");
+		scanf("%s",p->data.day);
+		printf("\n请输入使用者：");
+		scanf("%s",p->data.username);
+			p->next=z;
+	r->next=p;
+
+   
+}
+
+void tianjia()    //添加函数
+{
+    int j;
+  while(1)
+  {    
+	
+    printf("***************添加子菜单******************\n");   //添加子菜单
+    printf("\t   1.表尾添加\n");
+    printf("\t   2.表头添加\n");
+    printf("\t   3.第i个元素之前添加\n");
+    printf("\t   4.在某个编号之前添加\n");
+    printf("\t   5.退出添加子菜单\n");
+    printf("\t 请输入选项1-5\n");
+    scanf("%d",&j);  
+	
+	switch (j)          //switch函数添加
+	{
+	  case 1: TailInsert();break;		//在尾部添加
+      case 2: HeadInsert();break;		//在头部添加
+      case 3: int i;
+		      printf("请输入在第i个元素之前添加");
+		      scanf("%d",&i);
+		      Insert1(i);break;			//在第i个元素之前添加
+      case 4: char num[4];
+			  printf("请输入在某个编号之后添加");
+		      scanf("%s",num);
+		     Insert2(num);break;		//在某个编号之前添加
+      case 5: return;break;
+      default:printf("输入错误，请重新输入\n");	
+	}
+  }
+}
+
+void dakai()	//打开文件子函数，导入文件
+{
+	system("cls");		//清屏指令
+	LNode *p,*r;
+	L=(LNode*)malloc(sizeof(LNode));	//新建空间
+	if(L==NULL)
+	{
+		printf("无内存空间可分配");
+		exit(0);
+	}								//判断是否有内存
+	L->next=NULL;					//有内存开始执行
+	r=L;
+	printf("请输入要打开的文件名\n");
+	scanf("%s",fileProname);			//输入要打开的文件名
+	FILE *fp;
+	if((fp=fopen(fileProname,"rb+"))==NULL)
+	{
+		printf("不能打开文件，按任意键退出");	//不能打开文件，按任意键退出
+		exit(0);
+	}
+	fread(&addnum,sizeof(int),1,fp);
+	int i;
+	for(i=0;i<addnum;i++)				//通过循环，将文件内容导入列表
+	{
+		p=(LNode*)malloc(sizeof(LNode));
+		if(p==NULL)
+		{
+			printf("无内存空间可分配");
+			exit(0);
+		}								//判断有无内存可以分配
+		fread(&(p->data),sizeof(Project),1,fp);
+		p->next=NULL;
+		r->next=p;
+		r=p;						//指针向后移动
+	}
+	printf("\n\t信息导入成功\n");
+	fclose(fp);				//关闭文件
+
+}
+void baocun()
+{
+	LNode *r;
+	printf("请输入要保存的文件名\n");
+	scanf("%s",fileProname);
+	FILE *fp;
+	if((fp=fopen(fileProname,"wb"))==NULL)
+	{
+		printf("不能创建文件，按任意键退出");
+		exit(0);
+	}
+	fwrite(&addnum,sizeof(int),1,fp);
+	r=L->next;
+	while(r!=NULL)
+	{
+		fwrite(&(r->data),sizeof(Project),1,fp);
+		r=r->next;
+	}
+	printf("保存成功\n");
+	fclose(fp);
+}
+
+void paixu1()   //排序函数
+{
+	system("cls");
+	LNode *p,*q;
+	Project temp;
+	q=(LNode*)malloc(sizeof(LNode));
+	p=L->next;
+	if(L==NULL)
+	{
+		printf("没有数据无法进行排序!");
+		printf("按任意键返回!");
+	}
+	for(;p!=NULL;p=p->next)
+	{
+		for(q=p->next;q;q=q->next)
+		{
+			if(strcmp(p->data.Proname,q->data.Proname)>0)
+			{
+				temp=p->data;
+				p->data=q->data;
+				q->data=temp;
+			}
+	}}
+	printf("排序成功!");
+	printf("项目编号由大到小排序");
+	xianshi();
+}
+void paixu2()   //排序函数
+{
+	system("cls");
+	LNode *p,*q;
+	Project temp;
+	q=(LNode*)malloc(sizeof(LNode));
+	p=L->next;
+	if(L==NULL)
+	{
+		printf("没有数据无法进行排序!");
+		printf("按任意键返回!");
+	}
+	for(;p!=NULL;p=p->next)
+	{
+		for(q=p->next;q;q=q->next)
+		{
+			if(p->data.money<q->data.money)
+			{
+				temp=p->data;
+				p->data=q->data;
+				q->data=temp;
+			}
+	}}
+	printf("排序成功!");
+	printf("项目编号由大到小排序");
+	xianshi();
+}
+void paixu()
+{
+	int k;
+	printf("***************排序子菜单******************\n");   //添加子菜单
+    printf("\t   1.对项目排序\n");
+    printf("\t   2.对数额排序\n");
+    printf("\t   3.退出添加子菜单\n");
+    printf("\t 请输入选项1-3\n");
+    scanf("%d",&k);
+	switch (k)          //switch函数添加
+	{
+	  case 1: paixu1();break;
+      case 2: paixu2();break;
+      case 3: return;break;
+      default:printf("输入错误，请重新输入\n");	
+	}
+}
+void main()
+{
+	int m;
+	while(1)
+	{
+		printf("********欢迎使用资产管理系统********\n");
+		printf("***************主菜单***************\n");
+		printf("\t    0.新建数据\n");
+		printf("\t    1.显示数据\n");
+		printf("\t    2.删除数据\n");
+		printf("\t    3.查找数据\n");
+		printf("\t    4.修改数据\n");
+		printf("\t    5.添加数据\n");
+		printf("\t    6.打开数据\n");
+		printf("\t    7.排序数据\n");
+		printf("\t    8.保存数据\n");
+		printf("\t    9.退出系统\n");
+		printf("\t  请输入选项0-8\n");
+		scanf("%d",&m);
+	
+	switch(m)
+	{
+		case 0:xinjian();break;
+		case 1:xianshi();break;
+		case 2:shanchu();break;
+		case 3:chazhao();break;
+		case 4:xiugai();break;
+		case 5:tianjia();break;
+		case 6:dakai();break;
+		case 7:paixu();break;
+		case 8:baocun();break;
+		case 9:exit(0);break;
+		default:printf("输入错误，请重新输入\n");
+	}
+	}	
+}
